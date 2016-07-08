@@ -18,22 +18,26 @@ SLAVE2="10.10.0.6"
 # SLAVE3="10.10.0.7"
 
 # 1 for weave; 2 for docker; 3 for process
-scene = 3
+scene = 4
 
 # ip range
 ip_low = 0
-ip_high = 10 # high + 1
+ip_high = 15 # high + 1
 
 result = []
 
 ssh_dict={}
 for i in range(ip_low,ip_high):
 	if scene == 1:				
-		CMD="sudo docker run --net=weave -t --rm networkstatic/iperf3 -c 10.40.0."+str(i)
+		CMD="sudo docker run --net=weave -t --rm networkstatic/iperf3 -c 10.32.0."+str(i)
 	elif scene == 2:
 		CMD="sudo docker run -t --rm networkstatic/iperf3 -c 172.17.0."+str(i)
+	elif scene == 5:
+		CMD="sudo docker run -t --rm networkstatic/iperf3 -c 10.10.0.10 -p 70"+str(i)
 	elif scene == 3:
-		CMD="sudo iperf3 -c 10.10.0.6 -p 70"+str(i)
+		CMD="sudo iperf3 -c 10.10.0.10 -p 70"+str(i)
+	elif scene == 4:
+		CMD="sudo iperf3 -c 127.0.0.1 -p 70"+str(i)
 	
 	#ssh = subprocess.Popen(["ssh","%s" % SLAVE2, CMD], shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 	print CMD+"\n"
@@ -52,13 +56,18 @@ for i in range(ip_low,ip_high):
 		error = ssh.stderr.readlines()
 		print >>sys.stderr, "ERROR: %s" % error
 
+# elems stores all the words in a line
+elems = []
+bws = []
 if result != []:
 	#print result
 	for line in result:
-		#matches = re.findall('sender*receiver', line, re.DOTALL)
 		#print(matches)
-
 		if re.search("sender", line):
 			print(line)
-			#print re.match("GBytes \w Gbits",line)
-			
+			elems = line.split()
+                        #print(elems[6])
+                        bws.append(float(elems[6]))
+        print(bws)
+        print("\n")
+        print(sum(bws))
