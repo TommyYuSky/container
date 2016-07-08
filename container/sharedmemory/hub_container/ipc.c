@@ -13,12 +13,12 @@
 #include <mqueue.h>
 
 #define Q_NAME	"/ch6_ipc"
-#define MAX_SIZE 1024
+#define MAX_SIZE 1024000
 #define M_EXIT	"done"
 #define SRV_FLAG1  "-hub"
 #define SRV_FLAG2  "-producer"
 #define SRV_FLAG3  "-consumer"
-#define MSG_NUM 1000000000
+#define MSG_NUM 1000
 
 int main(int argc, char *argv[])
 {
@@ -105,8 +105,8 @@ int producer()
 	{
 		//if (){
 		//}
-		sprintf(ptr,"%s",msg);
-		//ptr += strlen(msg);	
+		//sprintf(ptr,"%s",msg);
+		ptr += strlen(msg);	
     		i=i+1;
 	}
 	
@@ -132,6 +132,7 @@ int consumer()
 	void *ptr;
 	int i;
 	long int len;
+	char buffer[MAX_SIZE+1];
 	
 	shm_fd = shm_open(name, O_RDONLY, 0666);
 
@@ -146,12 +147,17 @@ int consumer()
 		printf("Map failed\n");
 		exit(-1);
 	}
+
+	// set the buffer for copy
+	memset(buffer, 0, MAX_SIZE);
 	
 	gettimeofday(&stime,NULL);
 	int rmsg_num = 0; 
 	do {
 		//printf("%s", ptr);
-		len = len + strlen(ptr);
+		//sprintf(buffer, 0, MAX_SIZE);
+		memcpy(buffer, ptr, MAX_SIZE);
+		//len = len + strlen(ptr);
 		rmsg_num ++;
 	} while (rmsg_num <= MSG_NUM);
 
@@ -159,8 +165,8 @@ int consumer()
 	long long int diff_usec = 1000000 * (etime.tv_sec-stime.tv_sec) + etime.tv_usec-stime.tv_usec;
 	long long int diff_byte = MAX_SIZE*rmsg_num;
 	double throughput = diff_byte*8/diff_usec; // Megabyte
-	printf("len: %ll \n",len);
-	printf("Byte: %ll MB; Time: %ll us; Msg number: %d\n",diff_byte/1000000,diff_usec,rmsg_num);
+	printf("len: %d \n",len);
+	printf("Byte: %d MB; Time: %d us; Msg number: %d\n",diff_byte/1000000,diff_usec,rmsg_num);
 	printf("Throughput: %f Gbits/s\n",throughput/1000);
 
 	/* remove the shared memory segment */
